@@ -1,12 +1,14 @@
 import tensorflow as tf
 import time
 import os
+import h5py
+import numpy as np
+import glob
 from func import (
     input_setup,
     checkpoint_dir,
-    read_data,
-    merge,
-    imsave
+    imsave,
+    merge
 )
 class SRCNN(object):
 
@@ -61,7 +63,10 @@ class SRCNN(object):
 
         data_dir = checkpoint_dir(config)
         
-        input_, label_ = read_data(data_dir)
+        input_, label_ = 0, 0
+        with h5py.File(data_dir, 'r') as hf:
+        	input_ = np.array(hf.get('input'))
+        	label_ = np.array(hf.get('label'))
 
         # using adam optimizer for stochastic gradient descent
         self.train_op = tf.train.AdamOptimizer(learning_rate=config.learning_rate).minimize(self.loss)
@@ -82,11 +87,9 @@ class SRCNN(object):
                     batch_labels = label_[idx * config.batch_size : (idx + 1) * config.batch_size]
                     counter += 1
                     _, err = self.sess.run([self.train_op, self.loss], feed_dict={self.images: batch_images, self.labels: batch_labels})
-                    if counter % 10 == 0:
+                    if counter % 50 == 0:
                         print("Epoch: [%2d], step: [%2d], time: [%4.4f], loss: [%.8f]" % ((ep+1), counter, time.time()-time_, err))
-                        #for test purpose
-                        #print(label_[1] - self.pred.eval({self.images: input_})[1],'loss:]',err)
-                    if counter % 500 == 0:
+                    if counter % 1000 == 0:
                         self.save(config.checkpoint_dir, counter)
         # Test
         else:
@@ -96,7 +99,9 @@ class SRCNN(object):
             result = result.squeeze()
             #test
             print(type(image))
+
             imsave(image, config.result_dir+'/result.png', config)
+
 
     def load(self, checkpoint_dir):
     	# load checkpoint

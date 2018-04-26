@@ -9,7 +9,7 @@ In this project, our problem definition is to achieve the goal that generating h
 
 We are interested in the technology of super-resolution because it is both challenging and important. Due to the nature of the project,  we need to infer more information of the graphs from a limited amount of provided information, which is not meant to be tackled with ease. But actually, the challenges indicates the importance of our outcomes.
 
-
+As an outcome, we used TensorFlow to reimplement the SRCNN model and test it.
 ### Dependency
 
 	*Tensorflow for training model and computing outputs

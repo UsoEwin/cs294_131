@@ -46,9 +46,10 @@ class SRCNN(object):
 
         self.saver = tf.train.Saver() # To save checkpoint
         
-        # two relus and a non-activision function layer for averaging and generate outputs
+        
 
     def model(self):
+    	# two relus and a non-activision function layer for averaging and generate outputs
         conv1 = tf.nn.relu(tf.nn.conv2d(self.images, self.weights['w1'], strides=[1,1,1,1], padding='VALID') + self.biases['b1'])
         conv2 = tf.nn.relu(tf.nn.conv2d(conv1, self.weights['w2'], strides=[1,1,1,1], padding='VALID') + self.biases['b2'])
         conv3 = tf.nn.conv2d(conv2, self.weights['w3'], strides=[1,1,1,1], padding='VALID') + self.biases['b3'] 
@@ -65,6 +66,7 @@ class SRCNN(object):
         # using adam optimizer for stochastic gradient descent
         self.train_op = tf.train.AdamOptimizer(learning_rate=config.learning_rate).minimize(self.loss)
         tf.global_variables_initializer().run()
+        # for output of training situations
         counter = 0
         time_ = time.time()
 
@@ -72,17 +74,14 @@ class SRCNN(object):
         # Train
         if config.mode:
 
-            print("Now Start Training...")
-
+            print("Training.")
             for ep in range(config.epoch):
-                # Run by batch images
-                batch_idxs = len(input_) // config.batch_size
-                for idx in range(0, batch_idxs):
+                single_batch = len(input_) // config.batch_size
+                for idx in range(0, single_batch):
                     batch_images = input_[idx * config.batch_size : (idx + 1) * config.batch_size]
                     batch_labels = label_[idx * config.batch_size : (idx + 1) * config.batch_size]
                     counter += 1
                     _, err = self.sess.run([self.train_op, self.loss], feed_dict={self.images: batch_images, self.labels: batch_labels})
-
                     if counter % 10 == 0:
                         print("Epoch: [%2d], step: [%2d], time: [%4.4f], loss: [%.8f]" % ((ep+1), counter, time.time()-time_, err))
                         #for test purpose
@@ -91,42 +90,33 @@ class SRCNN(object):
                         self.save(config.checkpoint_dir, counter)
         # Test
         else:
-            print("Now Start Testing...")
-            print("nx","ny",nx,ny)
-            
-            result = self.pred.eval({self.images: input_})
-            
+            print("Testing")    
+            result = self.pred.eval({self.images: input_})           
             image = merge(result, [nx, ny], self.c_dim)
             result = result.squeeze()
+            #test
+            print(type(image))
             imsave(image, config.result_dir+'/result.png', config)
 
     def load(self, checkpoint_dir):
-        """
-            To load the checkpoint use to test or pretrain
-        """
+    	# load checkpoint
         print("\nReading Checkpoints.....\n\n")
-        model_dir = "%s_%s" % ("srcnn", self.label_size)# give the model name by label_size
+        model_dir = "%s_%s" % ("srcnn", self.label_size)
         checkpoint_dir = os.path.join(checkpoint_dir, model_dir)
         ckpt = tf.train.get_checkpoint_state(checkpoint_dir)
         
         # Check the checkpoint is exist 
         if ckpt and ckpt.model_checkpoint_path:
-            ckpt_path = str(ckpt.model_checkpoint_path) # convert the unicode to string
+            ckpt_path = str(ckpt.model_checkpoint_path)
             self.saver.restore(self.sess, os.path.join(os.getcwd(), ckpt_path))
-            print("\n Checkpoint Loading Success! %s\n\n"% ckpt_path)
         else:
-            print("\n! Checkpoint Loading Failed \n\n")
+            print("\n! cannot load checkpoint \n\n")
     def save(self, checkpoint_dir, step):
-        """
-            To save the checkpoint use to test or pretrain
-        """
+    	# save the checkpoint
         model_name = "SRCNN.model"
         model_dir = "%s_%s" % ("srcnn", self.label_size)
         checkpoint_dir = os.path.join(checkpoint_dir, model_dir)
 
         if not os.path.exists(checkpoint_dir):
              os.makedirs(checkpoint_dir)
-
-        self.saver.save(self.sess,
-                        os.path.join(checkpoint_dir, model_name),
-                        global_step=step)
+        self.saver.save(self.sess,os.path.join(checkpoint_dir, model_name),global_step=step)

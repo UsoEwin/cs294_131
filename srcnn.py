@@ -88,7 +88,7 @@ class SRCNN(object):
                     counter += 1
                     _, err = self.sess.run([self.train_op, self.loss], feed_dict={self.images: batch_images, self.labels: batch_labels})
                     if counter % 50 == 0:
-                        print("Epoch: [%2d], step: [%2d], time: [%4.4f], loss: [%.8f]" % ((ep+1), counter, time.time()-time_, err))
+                        print("Epoch: [%2d], time: [%4.3f], loss: [%.8f]" % ((ep+1), time.time()-time_, err))
                     if counter % 1000 == 0:
                         self.save(config.checkpoint_dir, counter)
         # Test

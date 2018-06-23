@@ -1,7 +1,7 @@
 # CS 294-131 Course Project
 ## Fiat “Liquet” - Super-Resolution Using Deep Learning
 
-## Jingbo Wu, Junzhe Shi, Keyao Shen
+## Jingbo Wu
 
 ### Introduction
 
